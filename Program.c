@@ -1,9 +1,8 @@
-#include <memory.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Program.h"
-
-#include <stdio.h>
 
 int pc;
 int instructionIndex;
@@ -13,16 +12,51 @@ int* program;
 /* Associates to each instruction the amount of operators that it accepts, to make pc manipulation
  * faster */
 int operatorsAmount[] = {
+	// Special
+	[END] = 0,
+	[PRINT] = 1,
+	
+	// Setting
 	[SET] = 2,
+	[SETI] = 2,
+
+	// Arithmetic
 	[ADD] = 3,
 	[SUB] = 3,
+	[MUL] = 3,
+	[DIV] = 3,
+
+	[ADDI] = 3,
+	[SUBI] = 3,
+
+	// Logic
 	[AND] = 3,
+	[OR] = 3,
+	[NOT] = 2,
+
+	[ANDI] = 3,
+	[ORI] = 3,
+
+	// todo: unconditional jump
+	// Conditional jump
 	[BEQ] = 3,
+	[BNE] = 3,
+	[BGT] = 3,
+	[BGE] = 3,
+	[BLT] = 3,
 	[BLE] = 3,
-	[SLT] = 3,
+
+	// todo: the other conditional sets
+	// Conditional set
 	[SEQ] = 3,
-	[PRINT] = 1,
-	[END] = 0
+	[SNE] = 3,
+	[SLT] = 3,
+	[SLE] = 3,
+
+	[SEQI] = 3,
+	[SNEI] = 3,
+	[SLTI] = 3,
+	[SLEI] = 3,
 };
 
 void set_program(int* src, int size)
@@ -82,7 +116,6 @@ void set_instruction_index(int index)
 	// Doesn't restart from 0 if the instruction is ahead of the current one
 	else
 	{
-		printf("Current index %d, target index %d\n", instructionIndex, index);
 		while (instructionIndex < index)
 			move_to_next_instruction();
 	}

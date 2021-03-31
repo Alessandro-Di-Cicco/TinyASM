@@ -1,8 +1,4 @@
 #include <stdbool.h>
-
-// todo: find a way to get rid of this as well
-#define CONSUMERS_COUNT 4
-
 #include <stdio.h>
 
 #include "Program.h"
@@ -11,30 +7,38 @@
 #include "ArithmeticOperations.h"
 #include "UserOperations.h"
 #include "BranchingOperations.h"
+#include "LogicOperations.h"
+#include "ConditionalOperations.h"
+
+#define CONSUMERS_COUNT 6
 
 bool (*instructionConsumers[]) (const int*) = {
 	run_register_command,
 	run_arithmetic_command,
 	run_user_command,
-	run_branching_command
+	run_branching_command,
+	run_logic_command,
+	run_conditional_command,
 };
 
 int main(void)
 {
 	int program[] = {
-		SET, R1, 0,
-		SET, R7, 1,
-		// Loop start
-		SET, R0, 5,			// do {
-		ADD, R1, R7, R1,	// R1++
-		PRINT, R1,			// Print R1
-		BLE, R1, R0, 2,		// } while (R1 < R0 = 5)
+		SETI, R1, 2,
+		SETI, R2, 2,
+		
+		SEQ, R1, R2, R3,	// R1 == R2 -> R3	true
+		SLEI, R1, 2, R4,	// R1 <= 2	-> R4	true
+		SLTI, R1, 2, R5,	// R1 < 2	-> R6	false
+		SNE, R1, R6, R6,	// R1 != R6 -> R6	true
+		
+		PRINT, R0,
 		
 		END
 	};
 
 	// todo: make this not need the tokens number
-	set_program(program, 20);
+	set_program(program, 50);
 	
 	int* instruction;
 	// Instruction execution loop
@@ -53,6 +57,12 @@ int main(void)
 		if (i == CONSUMERS_COUNT)
 		{
 			printf("ERROR: instruction at line %d is not identified", get_instruction_index());
+			break;
+		}
+
+		if (instruction[0] == END)
+		{
+			printf("\nExecution terminated successfully.\n");
 			break;
 		}
 	}
