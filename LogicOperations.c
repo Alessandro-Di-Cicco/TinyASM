@@ -4,8 +4,8 @@
 #include "Memory.h"
 #include "Program.h"
 
-void logic_operation(const int* command);
-void not(const int* command);
+static void operation(const int* command);
+static void not(const int* command);
 
 bool run_logic_command(const int* command)
 {
@@ -15,19 +15,19 @@ bool run_logic_command(const int* command)
 	case OR:
 	case ANDI:
 	case ORI:
-		logic_operation(command);
+		operation(command);
 		return true;
 	case NOT:
 		not(command);
 		return true;
+	default:
+		return false;
 	}
-
-	return false;
 }
 
 // todo: naming this operation gives an error with aritmeticOperations.c that also defines operation()
 // but neither of these can see the other, these should be internal functions, what's going on?
-void logic_operation(const int* command)
+static void operation(const int* command)
 {
 	const int first = get_register((Register)command[1]);
 	const int second =
@@ -43,7 +43,7 @@ void logic_operation(const int* command)
 	set_register((Register)command[3], value);
 }
 
-void not(const int* command)
+static void not(const int* command)
 {
 	const int value = get_register((Register)command[1]);
 	set_register((Register)command[2], ~value);

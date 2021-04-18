@@ -5,14 +5,14 @@
 #include "Memory.h"
 #include "Program.h"
 
-void registers_operation(const int*);
-void immediate_operation(const int*);
+static void registers_operation(const int*);
+static void immediate_operation(const int*);
 
-void operation(int first, int second, Instruction instruction, Register target);
+static void operation(int first, int second, Instruction instruction, Register target);
 
 bool run_arithmetic_command(const int* command)
 {
-	switch (command[0])
+	switch ((Instruction)command[0])
 	{
 	case ADD:
 	case SUB:
@@ -31,7 +31,7 @@ bool run_arithmetic_command(const int* command)
 	}
 }
 
-void registers_operation(const int* command)
+static void registers_operation(const int* command)
 {
 	const int first = get_register((Register)command[1]);
 	const int second = get_register((Register)command[2]);
@@ -39,7 +39,7 @@ void registers_operation(const int* command)
 	operation(first, second, command[0], command[3]);
 }
 
-void immediate_operation(const int* command)
+static void immediate_operation(const int* command)
 {
 	const int first = get_register((Register)command[1]);
 	const int second = command[2];
@@ -47,7 +47,7 @@ void immediate_operation(const int* command)
 	operation(first, second, command[0], command[3]);
 }
 
-void operation(int first, int second, Instruction instruction, Register target)
+static void operation(int first, int second, Instruction instruction, Register target)
 {
 	int value;
 	

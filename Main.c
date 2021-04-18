@@ -3,6 +3,7 @@
 
 #include "Program.h"
 #include "Memory.h"
+#include "Parser.h"
 #include "RegisterOperations.h"
 #include "ArithmeticOperations.h"
 #include "UserOperations.h"
@@ -23,6 +24,12 @@ bool (*instructionConsumers[]) (const int*) = {
 
 int main(void)
 {
+	// todo: replace printf with puts
+	if (parseSource() == -1)
+		printf("Parsing error\n");
+	else printf("Parsing successful\n");
+	
+	/*
 	int program[] = {
 		SETI, R1, 2,
 		SETI, R2, 2,
@@ -65,8 +72,7 @@ int main(void)
 			printf("\nExecution terminated successfully.\n");
 			break;
 		}
-	}
-
+	}*/
 
 	printf("\n\n\n");
 	return 0;
