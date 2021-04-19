@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool run_branching_command(const int* command);
+void (*get_branching_instruction(char* instruction))(char*, char**);
 
 #endif

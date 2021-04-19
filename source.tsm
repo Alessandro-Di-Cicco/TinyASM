@@ -1,4 +1,12 @@
-ADDI,R1,R2,99999,   			 #comment here!
-,,,,,,,,
-line2
-line3
+SET,R1,5
+SET,R2,5
+SET,R4,666
+MUL,R3,R1,R2,   			 #comment here!
+PRINT,R3,
+BLE,R1,R4,7
+SUBI,R4,R3,5
+PRINT,R4,
+AND,R5,R1,R2
+PRINT,R5
+SEQ,R1,R0,R7
+PRINT,R1

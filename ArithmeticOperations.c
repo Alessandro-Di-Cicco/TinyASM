@@ -1,76 +1,42 @@
-#include "ArithmeticOperations.h"
-
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
-#include "Memory.h"
-#include "Program.h"
+#include "ArithmeticOperations.h"
+#include "Conversions.h"
+#include "StrUtils.h"
 
-static void registers_operation(const int*);
-static void immediate_operation(const int*);
+static bool is_arithmetic(char* instruction);
+static void run(char* instruction, char** operands);
 
-static void operation(int first, int second, Instruction instruction, Register target);
-
-bool run_arithmetic_command(const int* command)
+void (*get_arithmetic_instruction(char* instruction))(char*, char**)
 {
-	switch ((Instruction)command[0])
-	{
-	case ADD:
-	case SUB:
-	case MUL:
-	case DIV:
-		registers_operation(command);
-		return true;
-		
-	case ADDI:
-	case SUBI:
-		immediate_operation(command);
-		return true;
-		
-	default:
-		return false;
-	}
+	if (is_arithmetic(instruction)) 
+		return &run;
+	return NULL;
 }
 
-static void registers_operation(const int* command)
+static bool is_arithmetic(char* instruction)
 {
-	const int first = get_register((Register)command[1]);
-	const int second = get_register((Register)command[2]);
-	
-	operation(first, second, command[0], command[3]);
+	char* tests[] = { "ADD", "SUB", "MUL", "DIV" };
+	return str_contains(instruction, tests, 4);
 }
 
-static void immediate_operation(const int* command)
+static void run(char* instruction, char** operands)
 {
-	const int first = get_register((Register)command[1]);
-	const int second = command[2];
-	
-	operation(first, second, command[0], command[3]);
-}
+	const int first = get_register_value_literal(operands[1]);
+	const int second = strlen(instruction) == 4
+		             ? get_immediate_literal(operands[2])
+		             : get_register_value_literal(operands[2]);
+	const int destination = get_register_literal(operands[0]);
 
-static void operation(int first, int second, Instruction instruction, Register target)
-{
-	int value;
-	
-	switch (instruction)
-	{
-	case ADD:
-	case ADDI:
-		value = first + second;
-		break;
-	case SUB:
-	case SUBI:
-		value = first - second;
-		break;
-	case MUL:
-		value = first * second;
-		break;
-	case DIV:
-		value = first / second;
-		break;
-	default:
-		printf("ERROR: UNSUPPORTED OPERATION\n");
-		return;
-	}
-
-	set_register(target, value);
+	if (strstr(instruction, "ADD"))
+		set_register(destination, first + second);
+	else if (strstr(instruction, "SUB"))
+		set_register(destination, first - second);
+	else if (strstr(instruction, "MUL"))
+		set_register(destination, first * second);
+	// todo: divide by zero check!
+	else if (strstr(instruction, "DIV"))
+		set_register(destination, first / second);
 }

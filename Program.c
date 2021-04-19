@@ -1,122 +1,140 @@
+#include "Program.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "Program.h"
+#include "ArithmeticOperations.h"
+#include "BranchingOperations.h"
+#include "LogicOperations.h"
+#include "MiscOperations.h"
+#include "RegisterOperations.h"
+#include "ConditionalOperations.h"
 
-int pc;
-int instructionIndex;
-int programLength;
-int* program;
+// Type of pointers that run instructions
+typedef void (*run_func_t)(char*, char**);
+typedef run_func_t(*run_getter_t)(char*);
 
-/* Associates to each instruction the amount of operators that it accepts, to make pc manipulation
- * faster */
-int operatorsAmount[] = {
-	// Special
-	[END] = 0,
-	[PRINT] = 1,
-	
-	// Setting
-	[SET] = 2,
-	[SETI] = 2,
-
-	// Arithmetic
-	[ADD] = 3,
-	[SUB] = 3,
-	[MUL] = 3,
-	[DIV] = 3,
-
-	[ADDI] = 3,
-	[SUBI] = 3,
-
-	// Logic
-	[AND] = 3,
-	[OR] = 3,
-	[NOT] = 2,
-
-	[ANDI] = 3,
-	[ORI] = 3,
-
-	// todo: unconditional jump
-	// Conditional jump
-	[BEQ] = 3,
-	[BNE] = 3,
-	[BGT] = 3,
-	[BGE] = 3,
-	[BLT] = 3,
-	[BLE] = 3,
-
-	// todo: the other conditional sets
-	// Conditional set
-	[SEQ] = 3,
-	[SNE] = 3,
-	[SLT] = 3,
-	[SLE] = 3,
-
-	[SEQI] = 3,
-	[SNEI] = 3,
-	[SLTI] = 3,
-	[SLEI] = 3,
-};
-
-void set_program(int* src, int size)
+typedef struct InstructionNode
 {
-	free(program);
-	pc = 0;
-	instructionIndex = 0;
+	char* instruction;
+	char** operands;
+	void (*run)(char* instruction, char** operands);
+	struct InstructionNode* next;
+} InstructionNode;
 
-	program = malloc(sizeof(int) * size);
-	if (!program)
-		return;
-	
-	memcpy(program, src, sizeof(int) * size);
-	programLength = size;
+
+static run_func_t get_run(char* instruction);
+static InstructionNode* make_node(char* instruction, char** operands, int opCount);
+static void append_node(InstructionNode* node);
+
+static InstructionNode* head;
+static InstructionNode* tail;
+static InstructionNode* current;
+
+static int index;
+static int endAddress;
+
+void add_instruction(char* instruction, char** operands, int opCount)
+{
+	InstructionNode* node = make_node(instruction, operands, opCount);
+	append_node(node);
 }
 
-// todo: each single runner requests current instruction every time, this is not okay, it's bad for performance,
-// they should receive a pointer set to const and run with it
-int* get_current_instruction(void)
+static InstructionNode* make_node(char* instruction, char** operands, int opCount)
 {
-	if (pc >= programLength)
-		return NULL;
-	
-	const int argNum = operatorsAmount[program[pc]];
-	int* instruction = calloc(argNum + 1, sizeof(int));
-	
-	if (!instruction)
-		return NULL;
+	InstructionNode* node = malloc(sizeof(InstructionNode));
+	if (!node) { puts("Error, could not allocate space"); exit(-1); }
 
-	memcpy(instruction, program + pc, sizeof(int) * (argNum + 1));
-	
-	return instruction;
-}
+	// Instruction copy
+	const size_t instrLen = (strlen(instruction) + 1) * sizeof(char);
+	node->instruction = malloc(instrLen);
+	if (!node->instruction) { puts("Error, could not allocate space"); exit(-1); }
+	strcpy_s(node->instruction, instrLen, instruction);
 
-void move_to_next_instruction(void)
-{
-	const int argNum = operatorsAmount[program[pc]];
-	pc += argNum + 1;
-	instructionIndex++;
-}
+	// Clearing
+	node->next = NULL;
 
-int get_instruction_index(void)
-{
-	return instructionIndex;
-}
+	// Operands copy
+	node->operands = calloc(3, sizeof(char*));
+	if (!node->operands) { puts("Copy error"); exit(-1); }
 
-void set_instruction_index(int index)
-{
-	if (index < instructionIndex)
+	for (int i = 0; i < opCount; i++)
 	{
-		// todo: this could avoid re-starting and just move backwards (room for improvement here)
-		pc = 0;
-		instructionIndex = 0;
-		for (int i = 0; i < index; i++)
-			move_to_next_instruction();
+		const size_t len = (strlen(operands[i]) + 1) * sizeof(char);
+		node->operands[i] = malloc(len);
+		if (!node->operands[i]) { puts("Error, could not allocate space"); exit(-1); }
+		if (strcpy_s(node->operands[i], len, operands[i])) { puts("Copy error"); exit(-1); }
 	}
-	// Doesn't restart from 0 if the instruction is ahead of the current one
+
+	node->run = get_run(instruction);
+
+	return node;
+}
+
+void append_node(InstructionNode* node)
+{
+	if (!head)
+	{
+		head = node;
+		tail = node;
+		current = head;
+	}
 	else
 	{
-		while (instructionIndex < index)
-			move_to_next_instruction();
+		tail->next = node;
+		tail = node;
 	}
+
+	endAddress++;
+}
+
+void set_instruction_index(int value)
+{
+	if (value >= endAddress)
+	{
+		printf("Memory violation: accessing address %d out of the address space (endAddr = %d)\n", value, endAddress - 1);
+		exit(-1);
+	}
+	
+	if (index > value - 1)
+	{
+		current = head;
+		index = 0;
+	}
+
+	// Stops at index -1 because it will be advanced by another unit by the run function
+	for (; index < value - 1; index++)
+		current = current->next;
+}
+
+static run_func_t get_run(char* instruction)
+{	
+	static run_getter_t getters[] = {
+		get_arithmetic_instruction,
+		get_branching_instruction,
+		get_conditional_instruction,
+		get_logic_instruction,
+		get_register_instruction,
+		get_misc_instruction,
+	};
+
+	for (int i = 0, count = sizeof(getters) / sizeof(run_getter_t); i < count; i++)
+	{
+		const run_func_t runner = getters[i](instruction);
+		if (runner) return runner;
+	}
+
+	printf("Error, couldn't find runner for instruction %s\n", instruction);
+	exit(-1);
+}
+
+bool run_next()
+{
+	// This condition captures both an empty program and end of program
+	if (!current) return false;
+	current->run(current->instruction, current->operands);
+	current = current->next;
+	index++;
+	return true;
 }

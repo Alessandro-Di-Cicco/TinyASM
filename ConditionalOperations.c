@@ -1,56 +1,41 @@
 #include "ConditionalOperations.h"
+
+#include <stddef.h>
+
+#include "Conversions.h"
 #include "Program.h"
-#include "Memory.h"
+#include "StrUtils.h"
 
-void execute_operation(const int* command);
-void get_values(int* result, const int* command);
-void evaluate_operation(int first, int second, Instruction instruction, Register target);
+static bool is_conditional(char* instruction);
+static void run(char* instruction, char** operands);
 
-bool run_conditional_command(const int* command)
+void (*get_conditional_instruction(char* instruction))(char*, char**)
 {
-	// todo: use this approach on all the modules
-	if (command[0] < SEQ || command[0] > SLEI) return false;
-
-	execute_operation(command);
-	return true;
+	if (is_conditional(instruction))
+		return &run;
+	return NULL;
 }
 
-void execute_operation(const int* command)
+static bool is_conditional(char* instruction)
 {
-	int values[2];
-	get_values(values, command);
-	evaluate_operation(values[0], values[1], (Instruction)command[0], (Register)command[3]);
+	char* tests[] = { "SEQ", "SNE", "SGT", "SGE", "SLT", "SLE" };
+	return str_contains(instruction, tests, 6);
 }
 
-void get_values(int* result, const int* command)
+static void run(char* instruction, char** operands)
 {
-	result[0] = get_register((Register)command[1]);
-	result[1] = command[0] < SEQI ? get_register((Register)command[2]) : command[2];
-}
+	const int first = get_register_value_literal(operands[1]);
+	const int second = get_register_value_literal(operands[2]);
 
-void evaluate_operation(int first, int second, Instruction instruction, Register target)
-{
-	int result;
+	const Register output = get_register_literal(operands[0]);
 
-	switch (instruction)
+	// todo: this is the copy of the branching operators implementation, find a way to re-use them
+	if (instruction[2] == 'E' && instruction[1] != 'N' && first == second ||	// All the ones ending with E (except for SNE) admit equality
+		instruction[1] == 'G' && first > second ||	// SGE, SGT
+		instruction[1] == 'L' && first < second ||	// SLE, SLT
+		instruction[1] == 'N' && first != second)	// SNE
 	{
-	case SEQ:
-	case SEQI:
-		result = first == second;
-		break;
-	case SNE:
-	case SNEI:
-		result = first != second;
-		break;
-	case SLT:
-	case SLTI:
-		result = first < second;
-		break;
-	case SLE:
-	case SLEI:
-		result = first <= second;
-		break;
+		set_register(output, 1);
 	}
-
-	set_register(target, result);
+	else set_register(output, 0);
 }

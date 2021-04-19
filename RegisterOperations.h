@@ -1,8 +1,6 @@
 #ifndef REGISTER_OPERATIONS_h
 #define	REGISTER_OPERATIONS_h
 
-#include <stdbool.h>
-
-bool run_register_command(const int* command);
+void (*get_register_instruction(char* instruction))(char*, char**);
 
 #endif

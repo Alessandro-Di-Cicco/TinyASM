@@ -1,50 +1,50 @@
-#include <stdbool.h>
-
 #include "LogicOperations.h"
-#include "Memory.h"
-#include "Program.h"
 
-static void operation(const int* command);
-static void not(const int* command);
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 
-bool run_logic_command(const int* command)
+#include "Conversions.h"
+#include "StrUtils.h"
+
+static bool is_logic(char* instruction);
+static void run(char* instruction, char** operands);
+
+void (*get_logic_instruction(char* instruction))(char*, char**)
 {
-	switch (command[0])
+	if (is_logic(instruction))
+		return &run;
+	return NULL;
+}
+
+static bool is_logic(char* instruction)
+{
+	char* tests[] = { "AND", "OR", "NOT" };
+	if (str_contains(instruction, tests, 3))
 	{
-	case AND:
-	case OR:
-	case ANDI:
-	case ORI:
-		operation(command);
-		return true;
-	case NOT:
-		not(command);
-		return true;
-	default:
-		return false;
+		printf("%s contains something for logic\n", instruction);
 	}
+	return str_contains(instruction, tests, 3);
 }
 
-// todo: naming this operation gives an error with aritmeticOperations.c that also defines operation()
-// but neither of these can see the other, these should be internal functions, what's going on?
-static void operation(const int* command)
+static void run(char* instruction, char** operands)
 {
-	const int first = get_register((Register)command[1]);
-	const int second =
-		command[0] == ANDI || command[0] == ORI ?
-		command[2] :
-		get_register((Register)command[2]);
-
-	int value;
-	if (command[0] == ANDI || command[0] == AND)
-		value = first & second;
-	else value = first | second;
-
-	set_register((Register)command[3], value);
-}
-
-static void not(const int* command)
-{
-	const int value = get_register((Register)command[1]);
-	set_register((Register)command[2], ~value);
+	const int first = get_register_value_literal(operands[1]);
+	int second;
+	const Register output = get_register_literal(operands[0]);
+	
+	switch (instruction[0])
+	{
+	case 'A':
+		second = get_register_value_literal(operands[2]);
+		set_register(output, first & second);
+		break;
+	case 'O':
+		second = get_register_value_literal(operands[2]);
+		set_register(output, first | second);
+		break;
+	case 'N':
+		set_register(output, ~first);
+		break;
+	}
 }

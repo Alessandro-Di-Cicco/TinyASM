@@ -15,10 +15,10 @@ typedef struct InstructionInfo
 	OperandType operands[OPERAND_MAX];
 } InstructionInfo;
 
-InstructionInfo getInstructionInfo(char* instruction);
+InstructionInfo get_instruction_info(char* instruction);
 
-bool invalidInstruction(InstructionInfo* restrict instruction);
+bool invalid_instruction(InstructionInfo* restrict instruction);
 
-bool isOperandType(char* name, OperandType type);
+bool is_operand_type(char* name, OperandType type);
 
 #endif

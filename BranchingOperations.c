@@ -1,55 +1,40 @@
+#include <stddef.h>
+
 #include "BranchingOperations.h"
+
+#include <stdio.h>
+
+#include "Conversions.h"
 #include "Program.h"
-#include "Memory.h"
+#include "StrUtils.h"
 
-void branch(const int* command);
+static bool is_branching(char* instruction);
+static void run(char* instruction, char** operands);
 
-bool run_branching_command(const int* command)
+void (*get_branching_instruction(char* instruction))(char*, char**)
 {
-	switch (command[0])
-	{
-	case BEQ:
-	case BNE:
-	case BGT:
-	case BGE:
-	case BLT:
-	case BLE:
-		branch(command);
-		return true;
-	default:
-		return false;
-	}
+	if (is_branching(instruction))
+		return &run;
+	return NULL;
 }
 
-void branch(const int* command)
+static bool is_branching(char* instruction)
 {
-	const int first = get_register((Register)command[1]);
-	const int second = get_register((Register)command[2]);
-	bool result;
+	char* tests[] = { "BEQ", "BNE", "BGT", "BGE", "BLT", "BLE" };
+	return str_contains(instruction, tests, 6);
+}
 
-	switch (command[0])
+static void run(char* instruction, char** operands)
+{
+	const int first = get_register_value_literal(operands[0]);
+	const int second = get_register_value_literal(operands[1]);
+
+	const int address = get_immediate_literal(operands[2]);
+	if ((instruction[2] == 'E' && instruction[1] != 'N' || instruction[2] == 'Q') && first == second ||	// All the ones ending with E (except for BNE) admit equality
+		instruction[1] == 'G' && first > second ||	// BGE, BGT
+		instruction[1] == 'L' && first < second ||	// BLE, BLT
+		instruction[1] == 'N' && first != second)	// BNE
 	{
-	case BEQ:
-		result = first == second;
-		break;
-	case BNE:
-		result = first != second;
-		break;
-	case BGT:
-		result = first > second;
-		break;
-	case BGE:
-		result = first >= second;
-		break;
-	case BLT:
-		result = first < second;
-		break;
-	case BLE:
-		result = first <= second;
-		break;
+		set_instruction_index(address);
 	}
-	/* The value is -1 because, after this instruction finishes running, the runner will call
-	 * move_to_next_instruction, advancing the index by another unit */
-	if (result)
-		set_instruction_index(command[3] - 1);
 }

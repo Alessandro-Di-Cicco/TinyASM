@@ -1,6 +1,8 @@
 #ifndef PROGRAM_h
 #define PROGRAM_h
+#include <stdbool.h>
 
+/*
 typedef enum
 {
 	// Special
@@ -46,19 +48,17 @@ typedef enum
 	SNEI,		// Same as SNE, but the second operand is an immediate
 	SLTI,		// Same as SLT, but the second operand is an immediate
 	SLEI		// Same as SLE, but the second operand is an immediate
-} Instruction;
+} Instruction; */
 
-/* Sets the program to run */
-void set_program(int* src, int size);
+// Adds a new instruction to the program
+void add_instruction(char* instruction, char** operands, int opCount);
 
-/* Gets the current instruction, returns NULL if the program is beyond last instruction */
-int* get_current_instruction(void);
-/* Sets the pc to the value of the next instruction */
-void move_to_next_instruction(void);
+// Set the index of the next instruction to run
+void set_instruction_index(int value);
 
-/* Return the number of the current instruction (not the token index!) */
-int get_instruction_index(void);
-/* Set the index of the next instruction to run */
-void set_instruction_index(int);
+/* Runs the next instruction in the list, returning false if end of program reached
+ must be called only once all the instructions have been added. Calling "add_instruction()"
+ after run_next() has been called causes undefined behaviour */
+bool run_next(void);
 
 #endif
