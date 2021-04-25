@@ -18,8 +18,8 @@ void (*get_arithmetic_instruction(char* instruction))(const char*, const char**)
 
 static bool is_arithmetic(const char* instruction)
 {
-	char* tests[] = { "ADD", "SUB", "MUL", "DIV" };
-	return str_contains(instruction, tests, 4, true);
+	char* tests[] = { "ADD", "SUB", "MUL", "DIV", "MOD" };
+	return str_contains(instruction, tests, 5, true);
 }
 
 static void run(const char* instruction, const char** operands)
@@ -36,10 +36,12 @@ static void run(const char* instruction, const char** operands)
 		set_register(destination, first - second);
 	else if (strstr(instruction, "MUL"))
 		set_register(destination, first * second);
-	else if (strstr(instruction, "DIV"))
+	else if (strstr(instruction, "DIV") || strstr(instruction, "MOD"))
 	{
 		if (second == 0)
 			puts("FATAL ERROR: Dividing by zero!");
-		set_register(destination, first / second);
+		
+		if (strstr(instruction, "DIV")) set_register(destination, first / second);
+		else set_register(destination, first % second);
 	}
 }

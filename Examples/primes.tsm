@@ -1,0 +1,16 @@
+SET R0, 10000	    # the maximum number to test
+SET R1, 1			# current
+SET R2, 1			# isPrime = true 			 			outer_loop_start:
+SET R3, 2			# divisor = 2
+DIVI R4, R1, 2		# temp = current / 2		 		    inner_loop_start:
+BGT R3, R4, 12		# if (divisor > current / 2) goto outer_end
+MOD R4, R1, R3		# temp = current % divisor
+BNE R4, R7, 10		# if (current % divisor != 0) goto inner_end
+SET R2, 0			# isPrime = false
+BRA	12				# goto outer_end
+ADDI R3, R3, 1		# divisor++		 			  			inner_end:
+BRA 4				# goto inner_loop_start
+BEQ R2, R7, 14		# if (!isPrime) goto print_skip  		outer_end:
+PRINT R1			# Print prime number
+ADDI R1, R1, 1		# current++					  			print_skip:
+BLT R1, R0, 2		# if (current < limit)  goto outer_loop
