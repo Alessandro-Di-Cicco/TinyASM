@@ -12,7 +12,7 @@
 #include "ConditionalOperations.h"
 
 // Type of pointers that run instructions
-typedef void (*run_func_t)(char*, char**);
+typedef void (*run_func_t)(const char*, const char**);
 typedef run_func_t(*run_getter_t)(char*);
 
 typedef struct InstructionNode

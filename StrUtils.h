@@ -3,6 +3,6 @@
 #include <stdbool.h>
 
 // Returns true if any of the strings in pool are contained in source
-bool str_contains(char* source, char** pool, int size);
+bool str_contains(const char* source, char** pool, int size);
 
 #endif

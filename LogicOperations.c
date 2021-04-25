@@ -7,17 +7,17 @@
 #include "Conversions.h"
 #include "StrUtils.h"
 
-static bool is_logic(char* instruction);
-static void run(char* instruction, char** operands);
+static bool is_logic(const char* instruction);
+static void run(const char* instruction, const char** operands);
 
-void (*get_logic_instruction(char* instruction))(char*, char**)
+void (*get_logic_instruction(const char* instruction))(const char*, const char**)
 {
 	if (is_logic(instruction))
 		return &run;
 	return NULL;
 }
 
-static bool is_logic(char* instruction)
+static bool is_logic(const char* instruction)
 {
 	char* tests[] = { "AND", "OR", "NOT" };
 	if (str_contains(instruction, tests, 3))
@@ -27,7 +27,7 @@ static bool is_logic(char* instruction)
 	return str_contains(instruction, tests, 3);
 }
 
-static void run(char* instruction, char** operands)
+static void run(const char* instruction, const char** operands)
 {
 	const int first = get_register_value_literal(operands[1]);
 	int second;

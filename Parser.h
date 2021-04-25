@@ -2,6 +2,6 @@
 #define PARSER_h
 
 // Attempts to parse a source, returning -1 if an error occurred
-int parse_source();
+int parse_source(const char* filename);
 
 #endif

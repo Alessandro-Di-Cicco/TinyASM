@@ -5,17 +5,16 @@
 #include "Conversions.h"
 #include "Memory.h"
 
-static void print(char* instruction, char** operands);
+static void print(const char* instruction, const char** operands);
 
-void (*get_misc_instruction(char* instruction))(char*, char**)
+void (*get_misc_instruction(char* instruction))(const char*, const char**)
 {
-	printf("Evaluating print\n");
 	if (strcmp(instruction, "PRINT") == 0) return &print;
 
 	return NULL;
 }
 
-static void print(char* instruction, char** operands)
+static void print(const char* instruction, const char** operands)
 {
 	const Register reg = get_register_literal(operands[0]);
 	printf("R%d = %d\n", reg, get_register(reg));

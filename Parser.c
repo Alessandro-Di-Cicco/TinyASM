@@ -12,11 +12,11 @@
 
 static int parse_line(char* string);
 static int is_invalid(char* instruction, char* string, InstructionInfo info);
-static char* read_operands(char* instruction, InstructionInfo info, char** strtokContext, char** operands);
-static int check_comment(char* lastRead, const char* string, size_t stringLen);
+static int read_operands(char* instruction, InstructionInfo info, char** operands, int instructionLen);
+static char* read_instruction(char* string, int* tokenLen);
 
-int parse_source()
-{
+int parse_source(const char* filename)
+{	
 	FILE** file = malloc(sizeof(FILE*));
 	if (!file)
 	{
@@ -25,15 +25,16 @@ int parse_source()
 	}
 
 	// This returns 0 on success
-	const errno_t error = fopen_s(file, "source.tsm", "r");
-	if (error || !*file)
+	const errno_t error = fopen_s(file, filename, "r");
+	if (error != 0 || !*file)
 	{
 		puts("Error opening the file");
 		return -1;
 	}
 
-	// Line reading setup
-	char* line = malloc(sizeof(char) * 256);
+	/* Line reading setup, parsing will break with lines longer than 512 chars
+	 * a custom file-reading function (similar to getline() on unix) would be needed to fix this */
+	char* line = malloc(sizeof(char) * 512);
 	if (!line)
 	{
 		puts("Error allocating memory");
@@ -44,8 +45,7 @@ int parse_source()
 	// Line parsing
 	while (!feof(*file))
 	{
-		// todo: have this count each line length by scanning the file through getc(), allowing unlimited line length
-		if (!fgets(line, 256, *file) && feof(*file))
+		if (!fgets(line, 512, *file) && feof(*file))
 			puts("End of file reached");
 		else
 		{
@@ -57,24 +57,25 @@ int parse_source()
 				exit(-1);	// Immediate stop, the program cannot run
 			}
 		}
-
-		puts("\n");
 	}
+
+	free(line);
+	
 	return 0;
-} // parseSource()
+} // parse_source()
 
 
 static int parse_line(char* string)
-{
-	// Initializes context for strtok_s
-	char** context = malloc(sizeof(char*));
-	if (!context) return -1;
-
-	// Computed ahead of time because strtok_s alters the string
-	const size_t stringLen = strlen(string);
+{	
+	int * instructionLen = calloc(1, sizeof(int));
+	if (!instructionLen)
+	{
+		puts("Calloc error");
+		return -1;
+	}
+	char* instruction = read_instruction(string, instructionLen);
 	
-	char* instruction = strtok_s(string, ",\n", context);
-	InstructionInfo info = get_instruction_info(instruction);
+	const InstructionInfo info = get_instruction_info(instruction);
 
 	// Skips invalid instructions
 	const int validity = is_invalid(instruction, string, info);
@@ -83,35 +84,33 @@ static int parse_line(char* string)
 
 	// Visual studio compiler does not implement VLAs (optional feature in C11)
 	char* operands[OPERAND_MAX];
-	char* lastRead = read_operands(instruction, info, context, operands);
-	if (!lastRead) return -1;
-
-	// -1 if invalid input after the instruction, 0 if comment or nothing
-	if (check_comment(lastRead, string, stringLen) == -1) return -1;
+	
+	if (read_operands(string, info, operands, *instructionLen) == -1)
+		return -1;
 
 	add_instruction(instruction, operands, info.opNumber);
 
+	free(instructionLen);
+	for (int i = 0; i < info.opNumber; i++)
+		free(operands[i]);
+	
 	return 0;
-}
+} //parse_line()
 
 // Returns -1 if the instruction is invalid, 0 if it's valid and -2 if it's empty
 static int is_invalid(char* instruction, char* string, InstructionInfo info)
 {
+	// Empty line
 	if (strcmp(string, "\n") == 0) return -2;
-	
+
+	// When instruction begins with non-alpha char
 	if (!instruction)
 	{
 		puts("Invalid line");
 		return -1;
 	}
 
-	// Line that begins with ','
-	if (instruction != string)
-	{
-		puts("Found invalid token ',' at the start of the line");
-		return -1;
-	}
-
+	// The instruction doesn't exists
 	if (invalid_instruction(&info))
 	{
 		printf("Invalid instruction '%s' found", instruction);
@@ -119,77 +118,101 @@ static int is_invalid(char* instruction, char* string, InstructionInfo info)
 	}
 
 	return 0;
-}
+} // is_invalid()
 
-static char* read_operands(char* instruction, InstructionInfo info, char** strtokContext, char** operands)
+// Attempts to read all the operands, returning -1 if it fails
+static int read_operands(char* instruction, InstructionInfo info, char** operands, int instructionLen)
 {
-	char* lastRead = instruction;
+	char* moving = instruction + instructionLen;
 
-	// Operands reading
 	for (int i = 0; i < info.opNumber; i++)
 	{
-		// Less than expected
-		char* operand = strtok_s(NULL, ",\n", strtokContext);
-		if (!operand)
+		// Removes leading spaces
+		while (isspace(*moving))
+			moving++;
+
+		char* start = moving;
+
+		// Adds everything that is a char or digit
+		while (isalpha(*moving) || isdigit(*moving))
+			moving++;
+
+		const size_t size = sizeof(char) * (moving - start + 1);
+		/* Happens if there's a comma after the instruction or if there are two commas with
+		 * nothing, or space, in between them */
+		if (size == 1)
 		{
-			printf("Expected %d operands, found %d\n", info.opNumber, i);
-			return NULL;
+			puts("empty operand found");
+			return -1;
+		}
+		operands[i] = calloc(1, size);
+		
+		if(!operands)
+		{
+			puts("Allocation error");
+			return -1;
+		}
+		if (memcpy_s(operands[i], size, start, size - sizeof(char)))
+		{
+			puts("Memcpy error");
+			return -1;
 		}
 
-		// todo: add operand type validity check!
+		// Removes trailing space
+		while (isspace(*moving))
+			moving++;
 
-		// Multiple commas detection
-		const int len = operand - lastRead;
-		// todo: clarify the or, it might not be needed
-		if (len > 1 && (lastRead[len - 2] == ',' || lastRead[len - 1] == ','))
+		// Looks for a comma if it's not the last operand
+		if (*moving != ',' && i < info.opNumber - 1)
 		{
-			puts("Detected more than one comma between operands");
-			return NULL;
+			printf("Separator error, expected ',' but found '%c'\n", *moving);
+			return -1;
+		}
+		
+		// Looks for end of line or start of a comment, this solves the comment detection issue as well
+		if (*moving != '\0' && *moving != COMMENT_TOKEN && i == info.opNumber - 1)
+		{
+			printf("Separator error, expected end of line or '#' but found '%c'\n", *moving);
+			return -1;
 		}
 
-		// Checks if the operand is valid and of the required type
-		if (!is_operand_type(operand, info.operands[i]))
-		{
-			printf("Operand \"%s\" is invalid\n", operand);
-			return NULL;
-		}
+		/* Skips the separator for the (possible) next iteration
+		 * Doesn't cause issues in the last iteration (even if it goes past the null char */
+		moving++;
 
-		// Stores the operand in the operands array
-		const size_t space = (strlen(operand) + 1) * sizeof(char);
-		operands[i] = malloc(space);			// todo: remember to free this memory!
-		if (!operands[i])
+		// Operand validity check
+		if (!is_operand_type(operands[i], info.operands[i]))
 		{
-			puts("Memory allocation error");
-			return NULL;
+			printf("Operand '%s' is invalid\n", operands[i]);
+			return -1;
 		}
-		if (strcpy_s(operands[i], space, operand) != 0)
-		{
-			puts("Copy error");
-			return NULL;
-		}
-		lastRead = operand;
+		
+		// printf("--Successfully added operand %s\n", operands[i]);
 	}
 
-	return lastRead;
-}
+	return 0;
+} // read_operands()
 
-static int check_comment(char* lastRead, const char* string, size_t stringLen)
+// Reads the first string in the line, treating it as the instruction
+static char* read_instruction(char* string, int* tokenLen)
 {
-	// Comment detection
-	char* comment = lastRead + strlen(lastRead) + 1;
+	char* moving = string;
+	while (isalpha(*moving))
+		moving++;
 
-	// todo: current approach REQUIRES one comma after the last operand (should change it!)
-	// todo: also, a comma is required between instruction and first operand (weird)
-	// No comment, end of the input string
-	if ((size_t)(comment - string) > stringLen)
-		return 0;
+	const size_t size = sizeof(char) * (moving - string + 1);
+	// Happens when instruction begins with invalid char
+	if (size == 1)
+		return NULL;
+	char* instruction = calloc(1, size);
 
-	// Potential comment, removing all leading whitespace
-	while (isspace(*comment)) comment++;
-	// Real comment
-	if (*comment == '\0' || *comment == COMMENT_TOKEN) return 0;
-
-	// String not starting with the comment token, invalid
-	printf("Invalid token '%c'\n", *comment);
-	return -1;
-}
+	// Something wrong with copy
+	if (memcpy_s(instruction, size, string, size - sizeof(char)))
+	{
+		puts("Error copying instruction");
+		exit(-1);
+	}
+	
+	*tokenLen = moving - string;
+	return instruction;
+} // read_instruction

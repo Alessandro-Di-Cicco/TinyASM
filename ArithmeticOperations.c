@@ -6,23 +6,23 @@
 #include "Conversions.h"
 #include "StrUtils.h"
 
-static bool is_arithmetic(char* instruction);
-static void run(char* instruction, char** operands);
+static bool is_arithmetic(const char* instruction);
+static void run(const char* instruction, const char** operands);
 
-void (*get_arithmetic_instruction(char* instruction))(char*, char**)
+void (*get_arithmetic_instruction(char* instruction))(const char*, const char**)
 {
 	if (is_arithmetic(instruction)) 
 		return &run;
 	return NULL;
 }
 
-static bool is_arithmetic(char* instruction)
+static bool is_arithmetic(const char* instruction)
 {
 	char* tests[] = { "ADD", "SUB", "MUL", "DIV" };
 	return str_contains(instruction, tests, 4);
 }
 
-static void run(char* instruction, char** operands)
+static void run(const char* instruction, const char** operands)
 {
 	const int first = get_register_value_literal(operands[1]);
 	const int second = strlen(instruction) == 4
@@ -36,7 +36,10 @@ static void run(char* instruction, char** operands)
 		set_register(destination, first - second);
 	else if (strstr(instruction, "MUL"))
 		set_register(destination, first * second);
-	// todo: divide by zero check!
 	else if (strstr(instruction, "DIV"))
+	{
+		if (second == 0)
+			puts("FATAL ERROR: Dividing by zero!");
 		set_register(destination, first / second);
+	}
 }

@@ -3,14 +3,20 @@
 #include "Parser.h"
 #include "Program.h"
 
-int main(void)
+int main(int argc, char* argv[])
 {
-	// TODO IMPORTANT: debug all the operations implemented, some might not perform as expected!
+	if (argc < 2 || argc > 3)
+	{
+		puts("Invalid number of parameters, must be one or two");
+		return -1;
+	}
 	
-	// todo: replace printf with puts all over
-	if (parse_source() == -1)
+	// todo: allow to set debug mode from input
+	if (parse_source(argv[1]) == -1)
+	{
 		puts("Parsing error");
-	else puts("Parsing successful");
+		return -1;
+	}
 
 	while (run_next()) {}
 

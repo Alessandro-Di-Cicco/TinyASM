@@ -4,6 +4,6 @@
 
 #include <stdbool.h>
 
-void (*get_misc_instruction(char* instruction))(char*, char**);
+void (*get_misc_instruction(char* instruction))(const char*, const char**);
 
 #endif
