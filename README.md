@@ -6,7 +6,7 @@ Some examples of instructions are:
 `ADD R1, R2, R3 #R1 <- R2 + R3`
 `BLE R0, R4, 7 # if(R0 <= R4) goto 7`
 ## Structure of the machine
-The memory of the program is made of eight registers, R0-R7, which can contain integer values: these registers are actually of type `int`, which makes their size implementation-dependant. All registers are initialized to `0`.
+The memory of the program is made of eight registers, `R0`-`R7`, which can contain integer values: these registers are actually of type `int`, which makes their size implementation-dependant. All registers are initialized to `0`.
 Immediates are positive integer literals, without the `+` sign.
 The software is case-sensitive, so all instructions have to be written in uppercase character.
 ## Instructions
