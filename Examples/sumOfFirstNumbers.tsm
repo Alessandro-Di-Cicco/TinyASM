@@ -1,0 +1,5 @@
+SET R0, 100		# limit,		start:
+ADD R1, R1, R0	# total += limit
+SUBI R0, R0, 1	# limit--
+BGT R0, R7, 0	# if (limit > 0) goto start
+PRINT R1
