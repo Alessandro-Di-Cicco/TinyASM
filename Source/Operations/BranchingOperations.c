@@ -1,11 +1,11 @@
-#include "BranchingOperations.h"
+#include "Operations/BranchingOperations.h"
 
 #include <stddef.h>
 
-#include "ComparisionChecker.h"
-#include "Conversions.h"
+#include "Utils/ComparisionChecker.h"
+#include "Utils/Conversions.h"
 #include "Program.h"
-#include "StrUtils.h"
+#include "Utils/StrUtils.h"
 
 static bool is_branching(const char* instruction);
 static void run(const char* instruction, const char** operands);
@@ -20,7 +20,7 @@ void (*get_branching_instruction(const char* instruction))(const char*, const ch
 static bool is_branching(const char* instruction)
 {
 	char* tests[] = { "BEQ", "BNE", "BGT", "BGE", "BLT", "BLE" };
-	return str_contains(instruction, tests, 6);
+	return str_contains(instruction, tests, 6, false);
 }
 
 static void run(const char* instruction, const char** operands)

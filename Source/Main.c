@@ -5,13 +5,12 @@
 
 int main(int argc, char* argv[])
 {
-	if (argc < 2 || argc > 3)
+	if (argc != 2)
 	{
-		puts("Invalid number of parameters, must be one or two");
+		puts("Invalid number of parameters, must be one");
 		return -1;
 	}
 	
-	// todo: allow to set debug mode from input
 	if (parse_source(argv[1]) == -1)
 	{
 		puts("Parsing error");

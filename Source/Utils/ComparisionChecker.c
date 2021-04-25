@@ -1,4 +1,4 @@
-﻿#include "ComparisionChecker.h"
+﻿#include "Utils/ComparisionChecker.h"
 
 bool compare_values(const char* instruction, const int first, const int second)
 {

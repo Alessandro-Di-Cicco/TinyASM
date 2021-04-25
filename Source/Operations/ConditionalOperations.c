@@ -1,10 +1,10 @@
-#include "ConditionalOperations.h"
+#include "Operations/ConditionalOperations.h"
 
 #include <stddef.h>
 
-#include "Conversions.h"
-#include "StrUtils.h"
-#include "ComparisionChecker.h"
+#include "Utils/ComparisionChecker.h"
+#include "Utils/Conversions.h"
+#include "Utils/StrUtils.h"
 
 static bool is_conditional(const char* instruction);
 static void run(const char* instruction, const char** operands);
@@ -19,7 +19,7 @@ void (*get_conditional_instruction(char* instruction))(const char*, const char**
 static bool is_conditional(const char* instruction)
 {
 	char* tests[] = { "SEQ", "SNE", "SGT", "SGE", "SLT", "SLE" };
-	return str_contains(instruction, tests, 6);
+	return str_contains(instruction, tests, 6, false);
 }
 
 static void run(const char* instruction, const char** operands)

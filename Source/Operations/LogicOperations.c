@@ -1,11 +1,11 @@
-#include "LogicOperations.h"
+#include "Operations/LogicOperations.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
-#include "Conversions.h"
-#include "StrUtils.h"
+#include "Utils/Conversions.h"
+#include "Utils/StrUtils.h"
 
 static bool is_logic(const char* instruction);
 static void run(const char* instruction, const char** operands);
@@ -17,14 +17,11 @@ void (*get_logic_instruction(const char* instruction))(const char*, const char**
 	return NULL;
 }
 
+// todo: this checks are imperfect, they need to consider strlen too, change implementation of str_contains
 static bool is_logic(const char* instruction)
 {
 	char* tests[] = { "AND", "OR", "NOT" };
-	if (str_contains(instruction, tests, 3))
-	{
-		printf("%s contains something for logic\n", instruction);
-	}
-	return str_contains(instruction, tests, 3);
+	return str_contains(instruction, tests, 3, false);
 }
 
 static void run(const char* instruction, const char** operands)

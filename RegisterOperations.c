@@ -1,11 +1,11 @@
-#include "RegisterOperations.h"
+#include "Operations/RegisterOperations.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "Conversions.h"
+#include "Utils/Conversions.h"
 #include "Memory.h"
-#include "StrUtils.h"
+#include "Utils/StrUtils.h"
 
 static bool is_register_op(const char* instruction);
 static void run(const char* instruction, const char** operands);
@@ -20,7 +20,7 @@ void (*get_register_instruction(char* instruction))(const char*, const char**)
 static bool is_register_op(const char* instruction)
 {
 	char* tests[] = { "SET", "CPY" };
-	return str_contains(instruction, tests, 2);
+	return str_contains(instruction, tests, 2, false);
 }
 
 static void run(const char* instruction, const char** operands)

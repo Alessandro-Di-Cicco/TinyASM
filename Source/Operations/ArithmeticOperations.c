@@ -2,9 +2,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "ArithmeticOperations.h"
-#include "Conversions.h"
-#include "StrUtils.h"
+#include "Operations/ArithmeticOperations.h"
+#include "Utils/Conversions.h"
+#include "Utils/StrUtils.h"
 
 static bool is_arithmetic(const char* instruction);
 static void run(const char* instruction, const char** operands);
@@ -19,7 +19,7 @@ void (*get_arithmetic_instruction(char* instruction))(const char*, const char**)
 static bool is_arithmetic(const char* instruction)
 {
 	char* tests[] = { "ADD", "SUB", "MUL", "DIV" };
-	return str_contains(instruction, tests, 4);
+	return str_contains(instruction, tests, 4, true);
 }
 
 static void run(const char* instruction, const char** operands)

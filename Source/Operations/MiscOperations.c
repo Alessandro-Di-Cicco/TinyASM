@@ -1,8 +1,9 @@
+#include "Operations/MiscOperations.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#include "MiscOperations.h"
-#include "Conversions.h"
+#include "Utils/Conversions.h"
 #include "Memory.h"
 
 static void print(const char* instruction, const char** operands);

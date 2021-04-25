@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ArithmeticOperations.h"
-#include "BranchingOperations.h"
-#include "LogicOperations.h"
-#include "MiscOperations.h"
-#include "RegisterOperations.h"
-#include "ConditionalOperations.h"
+#include "Operations/ArithmeticOperations.h"
+#include "Operations/BranchingOperations.h"
+#include "Operations/LogicOperations.h"
+#include "Operations/MiscOperations.h"
+#include "Operations/RegisterOperations.h"
+#include "Operations/ConditionalOperations.h"
 
 // Type of pointers that run instructions
 typedef void (*run_func_t)(const char*, const char**);
