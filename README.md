@@ -3,7 +3,9 @@ Tiny ASM is a software capable of running Assembly programs written using a cust
 An instruction has the form `INSTRUCTION OP1, .., OPN [#COMMENT]`,
 where `[#comment]` represents an optional comment that follows the instruction. 
 Some examples of instructions are:
+
 `ADD R1, R2, R3 #R1 <- R2 + R3`
+
 `BLE R0, R4, 7 # if(R0 <= R4) goto 7`
 ## Structure of the machine
 The memory of the program is made of eight registers, `R0`-`R7`, which can contain integer values: these registers are actually of type `int`, which makes their size implementation-dependant. All registers are initialized to `0`.
